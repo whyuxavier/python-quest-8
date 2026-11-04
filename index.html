@@ -66,6 +66,7 @@
         <input id="cl" class="field mt-1" maxlength="6" placeholder="8-А"></label>
       <pre id="preview" class="code"></pre>
       <p id="err" class="text-sm text-[#f85149] hidden">Заповни ім’я, прізвище та клас, щоб почати.</p>
+      <p class="text-xs text-slate-400">🛡 Під час проходження фіксуються виходи зі сторінки (інша вкладка, згортання) і спроби відкрити Google Лінзу — їхня кількість потрапить у звіт.</p>
       <button class="btn btn-main w-full" type="submit">Почати гру</button>
     </form>
   </section>
@@ -97,6 +98,23 @@
 </div>
 
 <script>
+/* ============ КОНТРОЛЬ ЧЕСНОСТІ ============
+   Лише лічильник: фіксує виходи зі сторінки (інша вкладка, згортання, інше вікно)
+   і праве клацання (меню з Google Лінзою). Результат потрапляє у звіт. */
+const HC=(()=>{const K='hc:'+location.pathname;let c={out:0,lens:0},on=false,away=false,mute=0,tid;
+try{Object.assign(c,JSON.parse(localStorage.getItem(K))||{})}catch(e){}
+const sv=()=>{try{localStorage.setItem(K,JSON.stringify(c))}catch(e){}};
+const toast=m=>{let t=document.getElementById('hc-t');if(!t){t=document.createElement('div');t.id='hc-t';t.setAttribute('role','status');t.style.cssText='position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:99999;max-width:calc(100% - 32px);padding:10px 16px;border-radius:12px;background:#b42335;color:#fff;font:600 14px/1.35 system-ui,sans-serif;text-align:center;box-shadow:0 6px 24px #0007;pointer-events:none;transition:opacity .3s;opacity:0';document.body.appendChild(t)}t.textContent=m;t.style.opacity=1;clearTimeout(tid);tid=setTimeout(()=>t.style.opacity=0,3500)};
+const leave=()=>{if(!on||away||mute)return;away=true;c.out++;sv()};
+const back=()=>{if(!away)return;away=false;if(on)toast('⚠ Вихід зі сторінки зафіксовано: '+c.out)};
+document.addEventListener('visibilitychange',()=>document.hidden?leave():back());
+addEventListener('blur',()=>setTimeout(()=>{if(!document.hasFocus())leave()},150));
+addEventListener('focus',back);
+document.addEventListener('contextmenu',e=>{if(!on)return;e.preventDefault();c.lens++;sv();toast('⚠ Спробу відкрити меню / Google Лінзу зафіксовано: '+c.lens)});
+['alert','confirm','prompt','print'].forEach(f=>{const o=window[f];if(o)window[f]=function(){mute++;try{return o.apply(window,arguments)}finally{setTimeout(()=>mute--,600)}}});
+return{start(){on=true},stop(){on=false;away=false},reset(){c={out:0,lens:0};sv()},get:()=>({...c}),
+text:(x=c)=>`Контроль чесності: виходів зі сторінки — ${x.out}, спроб Google Лінзи — ${x.lens}`,
+html:(x=c)=>`<div style="margin:12px 0;padding:10px 14px;border:1px dashed currentColor;border-radius:10px">🛡 Виходів зі сторінки: <b>${x.out}</b> · Спроб Google Лінзи: <b>${x.lens}</b></div>`};})();
 /* ============ ЗАВДАННЯ ============
    Перший варіант відповіді — ПРАВИЛЬНИЙ (при показі варіанти перемішуються автоматично).
    Щоб додати питання — скопіюйте рядок {q:..., o:[...], e:...} у потрібний рівень. */
@@ -164,7 +182,7 @@ function restoreProgress() {
     });
     $('#who').textContent = `${st.ln} ${st.fn} · ${st.cl}`;
     if (st.lvl >= LEVELS.length) showReport();
-    else { show('s-map'); buildMap(); updateMap(true); }
+    else { HC.start(); show('s-map'); buildMap(); updateMap(true); }
   } catch (_) { /* Пошкоджені або застарілі дані ігноруються. */ }
 }
 
@@ -181,6 +199,7 @@ $('#form').addEventListener('submit', e => {
   if (!v('fn') || !v('ln') || !v('cl')) { $('#err').classList.remove('hidden'); return; }
   Object.assign(st, {fn:v('fn'), ln:v('ln'), cl:v('cl'), lvl:0, qi:0, res:LEVELS.map(() => []), finished:false, openLevel:false});
   $('#who').textContent = `${st.ln} ${st.fn} · ${st.cl}`;
+  HC.reset(); HC.start();
   saveProgress(); show('s-map'); buildMap(); updateMap(true);
 });
 
@@ -395,9 +414,10 @@ function reportText() {
   const weak = per.filter(x => x.s < x.n).map(x => x.t);
   return `Python-змійка · ${st.ln} ${st.fn}, ${st.cl}\nДата: ${new Date().toLocaleDateString('uk-UA')}\nРезультат: ${s} з ${n}, орієнтовна оцінка ${grade}/12\n\n` +
     per.map((x, i) => `${i+1}. ${x.t}: ${x.s}/${x.n}`).join('\n') +
-    `\n\nПовторити: ${weak.length ? weak.join(', ') : 'усе засвоєно'}`;
+    `\n\nПовторити: ${weak.length ? weak.join(', ') : 'усе засвоєно'}\n${HC.text()}`;
 }
 function showReport() {
+  HC.stop();
   const {per, s, n, grade} = stats();
   const weak = per.filter(x => x.s < x.n);
   show('s-report');
@@ -414,6 +434,7 @@ function showReport() {
     </div>
     <div class="card mt-4"><p class="font-semibold">${weak.length ? 'Що варто повторити' : 'Чудовий результат'}</p>
       <p class="text-slate-300 text-sm mt-1">${weak.length ? weak.map(x => esc(x.t)).join(', ') + '. Перегляй конспект і пробуй ці теми в коді.' : 'Усі теми засвоєно. Спробуй написати власне вікно в Tkinter з кнопкою.'}</p></div>
+    ${HC.html()}
     <div class="flex flex-wrap gap-3 mt-5">
       <a id="mail" class="btn btn-main" href="#">Надіслати вчителю</a>
       <button id="copy" class="btn">Скопіювати звіт</button>
@@ -421,7 +442,7 @@ function showReport() {
     </div>`;
   $('#mail').href = `mailto:${TEACHER_EMAIL}?subject=${encodeURIComponent('Python-змійка: ' + st.ln + ' ' + st.fn + ', ' + st.cl)}&body=${encodeURIComponent(reportText())}`;
   $('#copy').onclick = () => { navigator.clipboard && navigator.clipboard.writeText(reportText()); $('#copy').textContent = 'Скопійовано'; };
-  $('#again').onclick = () => { localStorage.removeItem(STORAGE_KEY); $('#fn').value = st.fn; $('#ln').value = st.ln; $('#cl').value = st.cl; preview(); show('s-start'); };
+  $('#again').onclick = () => { localStorage.removeItem(STORAGE_KEY); HC.reset(); $('#fn').value = st.fn; $('#ln').value = st.ln; $('#cl').value = st.cl; preview(); show('s-start'); };
 }
 restoreProgress();
 </script>

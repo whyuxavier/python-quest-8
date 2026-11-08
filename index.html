@@ -49,6 +49,29 @@
   @keyframes pulse { from { transform:scale(1); opacity:.9; } to { transform:scale(1.9); opacity:0; } }
   @media (prefers-reduced-motion: reduce) { .pulse { animation:none; } }
 </style>
+<style>
+/* ---------- кнопка й вікно [i] ---------- */
+.ib-info{position:fixed;top:12px;right:12px;z-index:60;width:38px;height:38px;display:grid;place-items:center;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:#151a26;color:#ffd43b;font:700 16px/1 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.35);transition:border-color .15s,transform .15s}
+.ib-info:hover{border-color:#ffd43b;transform:translateY(-1px)}
+.ib-info:focus-visible{outline:2px solid #ffd43b;outline-offset:2px}
+.info-dlg{width:min(470px,calc(100vw - 24px));max-height:calc(100dvh - 40px);overflow:auto;padding:20px 22px;border:1px solid rgba(255,255,255,.15);border-radius:18px;background:#151a26;color:#e6edf3;box-shadow:0 24px 60px rgba(0,0,0,.5);line-height:1.5;font-size:15px}
+.info-dlg::backdrop{background:rgba(0,0,0,.6);backdrop-filter:blur(3px)}
+.info-dlg .dh{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.info-dlg h2{margin:0;font-size:19px;color:#fff}
+.info-dlg h3{margin:16px 0 6px;font-size:12px;letter-spacing:1.4px;text-transform:uppercase;color:#8b97ad}
+.info-dlg p{margin:8px 0}
+.info-dlg ul{margin:0;padding-left:20px;list-style:disc}
+.info-dlg li{margin:3px 0}
+.info-dlg .x{width:32px;height:32px;flex:none;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:transparent;color:#8b97ad;font-size:15px;cursor:pointer}
+.info-dlg .x:hover{color:#e6edf3;border-color:#ffd43b}
+.info-dlg kbd{display:inline-block;min-width:24px;padding:1px 7px;text-align:center;font:700 12px ui-monospace,SFMono-Regular,Menlo,monospace;border:1px solid rgba(255,255,255,.15);border-bottom-width:3px;border-radius:7px;background:#0d1117}
+.info-dlg .gh{display:inline-flex;align-items:center;gap:8px;margin-top:16px;padding:9px 15px;border-radius:11px;background:#ffd43b;color:#0d1117;font-weight:750;text-decoration:none}
+.info-dlg .gh svg{width:17px;height:17px;fill:currentColor}
+.info-dlg .gh:hover{filter:brightness(1.08)}
+.info-dlg .ai{margin:14px 0 0;font-size:12px;color:#8b97ad}
+@media(max-width:1100px){main{padding-top:60px!important}}
+@media print{.ib-info{display:none!important}}
+</style>
 </head>
 <body class="min-h-screen antialiased">
 <main class="max-w-5xl mx-auto px-4 py-8">
@@ -445,6 +468,25 @@ function showReport() {
   $('#again').onclick = () => { localStorage.removeItem(STORAGE_KEY); HC.reset(); $('#fn').value = st.fn; $('#ln').value = st.ln; $('#cl').value = st.cl; preview(); show('s-start'); };
 }
 restoreProgress();
+</script>
+<button class="ib-info" id="infoBtn" type="button" aria-label="Про квест" aria-haspopup="dialog" title="Про квест">i</button>
+<dialog class="info-dlg" id="infoDlg" aria-labelledby="infoTitle">
+  <div class="dh"><h2 id="infoTitle">Python-змійка</h2><button class="x" type="button" id="infoClose" aria-label="Закрити">✕</button></div>
+  <p>Тест-гра з Python для 8 класу: print, input, змінні, типи даних і Tkinter.</p>
+  <h3>Правила</h3>
+  <ul><li>7 рівнів на карті-змійці: тести, збирання коду, дописування коду й пошук помилок.</li><li>Рівні відкриваються по черзі.</li><li>Наприкінці — оцінка з 12 і звіт для вчителя.</li><li>Під час проходження фіксуються виходи зі сторінки та спроби відкрити Google Лінзу — це потрапляє у звіт.</li></ul>
+  <h3>Керування</h3>
+  <ul><li>Миша або дотик — обрати відповідь, рядок коду чи кнопку.</li><li><kbd>Enter</kbd> — перевірити відповідь у завданнях, де треба дописати код.</li></ul>
+  <a class="gh" href="https://github.com/whyuxavier/python-quiz" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9z"/></svg>GitHub</a>
+  <p class="ai">Сайт створено за допомогою ШІ.</p>
+</dialog>
+<script>
+(()=>{const d=document.getElementById('infoDlg'),b=document.getElementById('infoBtn');
+const open=()=>{if(d.open)return;if(d.showModal)d.showModal();else d.setAttribute('open','')};
+const close=()=>{if(d.close)d.close();else d.removeAttribute('open')};
+b.addEventListener('click',open);document.getElementById('infoClose').addEventListener('click',close);
+d.addEventListener('click',e=>{if(e.target===d)close()});
+d.addEventListener('close',()=>b.focus());})();
 </script>
 </body>
 </html>

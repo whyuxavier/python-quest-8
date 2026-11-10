@@ -209,14 +209,14 @@ function restoreProgress() {
 }
 
 /* ============ СТАРТ ============ */
-const NAMES=['Ярослав Мудрий','Леся Українка','Тарас Шевченко','Іван Франко','Віктор Глушков','Катерина Ющенко','Сергій Корольов','Ігор Сікорський','Іван Пулюй','Ада Лавлейс','Алан Тюрінг','Ліна Костенко','Марія Примаченко','Григорій Сковорода','Михайло Грушевський','Нікола Тесла','Тім Бернерс-Лі','Грейс Гоппер','Леонід Каденюк','Олександр Довженко','Соломія Крушельницька','Микола Амосов','Борис Патон','Марія Кюрі','Гвідо ван Россум'];
+const NAMES=[''];
 function pickName(){let last='';try{last=localStorage.getItem('fame-python-quest-8')||''}catch(e){}const pool=NAMES.filter(n=>n!==last),n=pool[Math.floor(Math.random()*pool.length)];try{localStorage.setItem('fame-python-quest-8',n)}catch(e){}return n}
 const PH=pickName().split(' ');
 $('#fn').placeholder=PH[0];$('#ln').placeholder=PH.slice(1).join(' ');
 function preview() {
   const fn=$('#fn').value.trim()||$('#fn').placeholder, ln=$('#ln').value.trim()||$('#ln').placeholder;
-  const full=[fn,ln].filter(Boolean).join(' '), cl=$('#cl').value.trim()||'8-А';
-  $('#preview').textContent = `name = "${full}"\nklas = "${cl}"\nprint("Привіт,", name, klas)`;
+  const full=[fn,ln].filter(Boolean).join(' '), cl=$('#cl').value.trim()||'';
+  $('#preview').textContent = `name = "${full}"\ngrade = "${cl}"\nprint("Привіт,", name, grade)`;
 }
 ['fn','ln','cl'].forEach(i => $('#'+i).addEventListener('input', preview));
 preview();
